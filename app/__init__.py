@@ -1,14 +1,17 @@
 import logging
 
 from flask import Flask
-from flask_appbuilder import AppBuilder, SQLA
+from flask_appbuilder import AppBuilder
+from flask_sqlalchemy import SQLAlchemy
 
 logging.basicConfig(format="%(asctime)s:%(levelname)s:%(name)s:%(message)s")
 logging.getLogger().setLevel(logging.INFO)
 
 app = Flask(__name__)
 app.config.from_object("config")
-db = SQLA(app)
-appbuilder = AppBuilder(app, db.session)
+db = SQLAlchemy(app)
+appbuilder = AppBuilder()
 
-from app import views  # noqa: E402,F401
+with app.app_context():
+    appbuilder.init_app(app, db.session)
+    from app import views  # noqa: E402,F401
