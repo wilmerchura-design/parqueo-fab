@@ -1,0 +1,50 @@
+{% extends base_template %}
+{% block content %}
+<div class="panel panel-primary">
+  <div class="panel-heading"><h4 style="margin:0">Asistente del parqueo (IA)</h4></div>
+  <div class="panel-body">
+    <p class="text-muted">Pregunta en lenguaje natural sobre ocupación, tarifas, ingresos o vehículos estacionados.
+      La IA responde usando datos actuales del sistema (sin datos personales de clientes).</p>
+    <div style="margin-bottom:10px">
+      <button type="button" class="btn btn-default btn-sm sugerencia">¿Qué espacios libres hay y en qué zona?</button>
+      <button type="button" class="btn btn-default btn-sm sugerencia">¿Cuánto se recaudó hoy?</button>
+      <button type="button" class="btn btn-default btn-sm sugerencia">¿Cuánto cuesta estacionar una moto 3 horas?</button>
+      <button type="button" class="btn btn-default btn-sm sugerencia">¿Qué vehículo lleva más tiempo estacionado?</button>
+    </div>
+    <textarea id="pregunta" class="form-control" rows="3" maxlength="500" placeholder="Escribe tu pregunta..."></textarea>
+    <div style="margin:10px 0">
+      <button id="enviar" class="btn btn-primary">Preguntar</button>
+      <span id="estado" class="text-muted" style="margin-left:10px"></span>
+    </div>
+    <div id="respuesta" class="well" style="display:none; white-space:pre-wrap"></div>
+    <small id="modelo" class="text-muted"></small>
+  </div>
+</div>
+<script>
+(function () {
+  var csrf = "{{ csrf_token() if csrf_token is defined else '' }}";
+  var $p = document.getElementById('pregunta'), $b = document.getElementById('enviar'),
+      $r = document.getElementById('respuesta'), $e = document.getElementById('estado'),
+      $m = document.getElementById('modelo');
+  document.querySelectorAll('.sugerencia').forEach(function (btn) {
+    btn.addEventListener('click', function () { $p.value = btn.textContent; $p.focus(); });
+  });
+  $b.addEventListener('click', function () {
+    var q = $p.value.trim();
+    if (!q) { $p.focus(); return; }
+    $b.disabled = true; $e.textContent = 'Consultando...'; $m.textContent = '';
+    fetch('{{ url_for("AsistenteView.preguntar") }}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrf},
+      body: JSON.stringify({pregunta: q})
+    }).then(function (res) { return res.json(); }).then(function (d) {
+      $r.style.display = 'block'; $r.textContent = d.respuesta;
+      $r.className = 'well' + (d.ok ? '' : ' text-danger');
+      if (d.modelo && d.ok) { $m.textContent = 'Modelo: ' + d.modelo; }
+    }).catch(function () {
+      $r.style.display = 'block'; $r.textContent = 'Error de comunicación con el servidor.';
+    }).finally(function () { $b.disabled = false; $e.textContent = ''; });
+  });
+})();
+</script>
+{% endblock %}
