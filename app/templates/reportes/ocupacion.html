@@ -1,0 +1,37 @@
+{% extends base_template %}
+{% block content %}
+<div class="panel panel-primary">
+  <div class="panel-heading"><h4 style="margin:0">Ocupación actual por zona</h4></div>
+  <div class="panel-body">
+    <form method="get" class="form-inline" style="margin-bottom:15px">
+      <label>Zona</label>
+      <select name="zona" class="form-control">
+        <option value="">Todas</option>
+        {% for z in zonas %}<option value="{{ z.id }}" {% if f.zona == z.id %}selected{% endif %}>{{ z.nombre }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-primary" type="submit">Filtrar</button>
+    </form>
+
+    <table class="table table-striped">
+      <thead><tr><th>Zona</th><th>Libres</th><th>Ocupados</th><th>Mantenimiento</th><th>Total</th><th style="width:30%">Ocupación</th></tr></thead>
+      <tbody>
+      {% for z in datos.zonas %}
+        <tr><td>{{ z.zona }}</td><td>{{ z.Libre }}</td><td>{{ z.Ocupado }}</td><td>{{ z.Mantenimiento }}</td><td>{{ z.total }}</td>
+          <td><div class="progress" style="margin:0"><div class="progress-bar {% if z.porcentaje >= 85 %}progress-bar-danger{% elif z.porcentaje >= 60 %}progress-bar-warning{% else %}progress-bar-success{% endif %}" style="width: {{ z.porcentaje }}%; min-width:2em">{{ z.porcentaje }}%</div></div></td></tr>
+      {% else %}<tr><td colspan="6">Sin datos</td></tr>{% endfor %}
+      </tbody>
+      <tfoot><tr><th>Total</th><th>{{ datos.totales.Libre }}</th><th>{{ datos.totales.Ocupado }}</th><th>{{ datos.totales.Mantenimiento }}</th><th>{{ datos.totales.total }}</th><th>{{ datos.totales.porcentaje }}%</th></tr></tfoot>
+    </table>
+
+    <h5><b>Vehículos estacionados ahora ({{ datos.activos|length }})</b></h5>
+    <table class="table table-striped table-condensed">
+      <thead><tr><th>Ticket</th><th>Placa</th><th>Espacio</th><th>Zona</th><th>Entrada</th><th>Tiempo (min)</th><th>Monto estimado (Bs)</th></tr></thead>
+      <tbody>
+      {% for a in datos.activos %}
+        <tr><td>#{{ a.id }}</td><td>{{ a.placa }}</td><td>{{ a.espacio }}</td><td>{{ a.zona }}</td><td>{{ a.entrada.strftime('%d/%m/%Y %H:%M') }}</td><td>{{ a.minutos }}</td><td>{{ '%.2f'|format(a.estimado) }}</td></tr>
+      {% else %}<tr><td colspan="7">No hay vehículos estacionados</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
